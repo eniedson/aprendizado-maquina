@@ -7,12 +7,9 @@ def download_zip_file(file_id, dest_path):
     gdown.download(url, dest_path, quiet=False)
 
 def extract_zip_file(zip_path):
-    extract_to = ''
-    os.makedirs(extract_to, exist_ok=True)
     
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_to)
-        print(f"Arquivos extraídos para: {extract_to}")
+        zip_ref.extractall()
 
 def main():
     file_id = '1DlyQQtmEJ-zK0huUPUyPxUajWHeIfDVf'

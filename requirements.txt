@@ -2,3 +2,5 @@ llama-index
 llama-parse
 pandas
 gdown
+PyPDF2
+matplotlib
