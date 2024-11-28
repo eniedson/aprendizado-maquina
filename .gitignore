@@ -2,3 +2,4 @@ node_modules
 files
 .env
 __pycache__/
+files.zip
