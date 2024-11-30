@@ -2,3 +2,4 @@ groq
 pandas
 openai==1.55.3
 httpx==0.27.2
+langchain_community
