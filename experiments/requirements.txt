@@ -15,3 +15,4 @@ langchain_qdrant
 sentence_transformers
 elasticsearch
 evaluate
+ollama
