@@ -11,14 +11,14 @@ import tqdm
 
 
 class Rag:
-    def __init__(self, model, data, embedding_model="sentence-transformers/all-MiniLM-L6-v2", top_k=3, embeddings_size = 384):
-        self.model = ChatOllama(model=model) if model else None
+    def __init__(self, model, data, embedding_model="sentence-transformers/all-MiniLM-L6-v2", top_k=3, embeddings_size = 384, temperature=0.5):
+        self.model = ChatOllama(model=model, temperature=temperature) if model else None
         self.data = data
         self.top_k = top_k
         self.embedding_size = embeddings_size
         self.embedding = HuggingFaceEmbeddings(model_name=embedding_model)
 
-        self.es = Elasticsearch("http://localhost:9202", http_auth=("elastic", "teste123"), request_timeout=999999)
+        self.es = Elasticsearch("http://localhost:9200", http_auth=("elastic", "teste123"), request_timeout=999999)
         self.es_index = "documents"
 
         self.chain = (self.model | StrOutputParser()) if model else None
@@ -48,7 +48,7 @@ class Rag:
             """
         )
     
-    def get_text(relatorio, voto):
+    def get_text(self, relatorio, voto):
         return "Relatório:\n\n" + relatorio + '\n\Voto:\n\n' + voto
 
     def ingest(self, reindex=True):
@@ -107,7 +107,7 @@ class Rag:
             print('Elasticsearch index ready!')
             return (datetime.now() - tic).total_seconds()
 
-    def search(self, query):
+    def search(self, query, id):
         docs_semantic = None
         query_embedding = self.embedding.embed_query(query)
         response_semantic = self.es.search(
@@ -119,6 +119,17 @@ class Rag:
                     "query_vector": query_embedding,
                     "k": self.top_k,
                     "num_candidates": 100
+                },
+                "query": {
+                    "bool": {
+                        "must_not": [
+                            {
+                                "term": {
+                                    "id": id
+                                }
+                            }
+                        ]
+                    }
                 }
             }
         )
@@ -131,8 +142,21 @@ class Rag:
             index=self.es_index,
             body={
                 "query": {
-                    "match": {
-                        "text": query
+                    "bool": {
+                        "must": [
+                            {
+                                "match": {
+                                    "text": query
+                                }
+                            }
+                        ],
+                        "must_not": [
+                            {
+                                "term": {
+                                    "id": id
+                                }
+                            }
+                        ]
                     }
                 },
                 "size": self.top_k
@@ -147,18 +171,21 @@ class Rag:
 
     def rrf(self, docs_semantic, docs_lexical, k=10):
         scores = {}
+        docs = {}
         for rank, doc in enumerate(docs_semantic):
-            scores[doc] = scores.get(doc, 0) + 1 / (k + rank)
+            scores[doc['id']] = scores.get(doc['id'], 0) + 1 / (k + rank)
+            docs[doc['id']] = doc
         for rank, doc in enumerate(docs_lexical):
-            scores[doc] = scores.get(doc, 0) + 1 / (k + rank)
+            scores[doc['id']] = scores.get(doc['id'], 0) + 1 / (k + rank)
+            docs[doc['id']] = doc
 
         combined_docs = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
-        return combined_docs[:self.top_k]
+        result_docs = list(map(lambda id: docs[id], combined_docs))
+        return result_docs[:self.top_k]
 
-    def ask(self, relatorio: str, voto: str):
-        # TODO Indice do doc
+    def ask(self, relatorio: str, voto: str, id:int):
         query = self.get_text(relatorio, voto)
-        combined_docs = self.search(query)
+        combined_docs = self.search(query, id)
         context = ""
         for i, doc in enumerate(combined_docs):
             context += f"Exemplo {i+1}: \n\n{doc['text']}\n\nAcordão:\n\n{doc['acordao']}"
