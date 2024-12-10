@@ -24,19 +24,13 @@ class Rag:
         self.chain = (self.model | StrOutputParser()) if model else None
         self.prompt = PromptTemplate.from_template(
             """
-            Você é um assistente jurídico especializado na redação de acórdãos do Tribunal de Contas do Estado do Acre. A partir das informações fornecidas, você deve elaborar um acórdão completo que siga uma estrutura clara, coesa e que inclua os seguintes elementos em um texto corrido:
+            Você é um assistente jurídico especializado na redação de acórdãos do Tribunal de Contas do Estado do Acre. A partir das informações fornecidas, você deve elaborar um acórdão completo que siga uma estrutura clara, coesa e que inclua os seguintes elementos em um texto corrido:\n\n
 
-            1. **Cabeçalho**: Inicie o acórdão com o nome do tribunal (Tribunal de Contas do Estado do Acre), o número do processo e a data de julgamento.
-            2. **Relator e Membros do Órgão Julgador**: Identifique o relator do processo, bem como os demais membros do órgão colegiado (câmara, turma, seção, órgão especial, plenário etc.) que participaram do julgamento. Informe também o resultado da votação (unânime ou com voto vencido).
-            3. **Resumo dos Fatos**: Resuma os fatos principais do processo, incluindo as alegações, os documentos relevantes e os argumentos apresentados pelas partes envolvidas.
-            4. **Fundamentação**: Apresente os fundamentos jurídicos da decisão. Isso deve incluir a análise das questões de direito envolvidas, as normas aplicáveis e a interpretação dos membros do órgão colegiado.
-            5. **Decisão**: Expresse de forma clara e objetiva a decisão do colegiado, indicando os resultados do julgamento e as providências a serem tomadas, caso aplicável (por exemplo, aprovação ou reprovação de contas, determinação de devolução de recursos, etc.).
-            6. **Voto Vencido** (se houver): Caso a votação não seja unânime, transcreva o voto vencido de um dos membros, expondo sua argumentação divergente.\n\n
-
-            Contexto:
+            <context>
             {contexto}
+            </context>
             
-            Com base no relatório e no voto abaixo e tomando como base o contexto fornecido, redija o texto do acordão:
+            Tomando como base o contexto fornecido e seguindo seu template e padrão. Com base no relatório e no voto abaixo, redija o texto do acordão:
 
             Relatório:
             {relatorio}
