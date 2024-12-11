@@ -1,6 +1,6 @@
 # README
 
-Machine Learing project
+Machine Learning Project
 
 ```code
 pip3 install -r requirements.txt

@@ -1,3 +1,0 @@
-gdown
-langchain
-scikit-learn
